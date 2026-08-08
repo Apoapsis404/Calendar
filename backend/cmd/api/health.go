@@ -3,5 +3,7 @@ package main
 import "net/http"
 
 func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Ok"))
+	respondWithJSON(w, 200, struct {
+		Health string `json:"health"`
+	}{Health: "OK"})
 }
