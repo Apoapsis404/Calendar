@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Apoapsis404/Calendar/internal/database"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -15,6 +16,7 @@ type application struct {
 
 type config struct {
 	addr string
+	DB   *database.Queries
 }
 
 func (app *application) mount() http.Handler {
@@ -24,6 +26,8 @@ func (app *application) mount() http.Handler {
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
+
+		r.Post("/users", app.createUserHandler)
 	})
 
 	return r
