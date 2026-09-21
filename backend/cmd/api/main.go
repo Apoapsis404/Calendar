@@ -29,6 +29,7 @@ func main() {
 	if err != nil {
 		log.Fatal("cannot connect to database", err)
 	}
+	defer conn.Close()
 
 	cfg := config{
 		addr: ":8080",

@@ -28,6 +28,7 @@ func (app *application) mount() http.Handler {
 		r.Get("/health", app.healthCheckHandler)
 
 		r.Post("/users", app.createUserHandler)
+		r.Post("/users/{id}", app.createDayHandler)
 	})
 
 	return r
