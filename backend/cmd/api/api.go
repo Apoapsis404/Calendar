@@ -28,7 +28,16 @@ func (app *application) mount() http.Handler {
 		r.Get("/health", app.healthCheckHandler)
 
 		r.Post("/users", app.createUserHandler)
-		r.Post("/users/{id}", app.createDayHandler)
+		r.Delete("/users/{id}", app.deleteUserHandler)
+
+		r.Post("/days/{user_id}", app.createDayHandler)
+		r.Delete("/days/{day_id}", app.deleteDayHandler)
+		r.Get("/days/{user_id}", app.getDaysHandler)
+
+		r.Post("/events", app.createEventHandler)
+		r.Delete("/events/{event_id}", app.deleteEventHandler)
+		r.Get("/events/{day_id}", app.getEventsHandler)
+
 	})
 
 	return r

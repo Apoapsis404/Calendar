@@ -13,19 +13,19 @@ import (
 )
 
 const createEvent = `-- name: CreateEvent :one
-INSERT INTO events (event_id, created_at, updated_at, event_name, start_time, end_time, reference_date)
+INSERT INTO events (event_id, created_at, updated_at, event_name, start_time, end_time, day_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING event_id, created_at, updated_at, event_name, start_time, end_time, reference_date
+RETURNING event_id, created_at, updated_at, event_name, start_time, end_time, day_id
 `
 
 type CreateEventParams struct {
-	EventID       uuid.UUID
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	EventName     string
-	StartTime     time.Time
-	EndTime       time.Time
-	ReferenceDate time.Time
+	EventID   uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	EventName string
+	StartTime time.Time
+	EndTime   time.Time
+	DayID     uuid.UUID
 }
 
 func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error) {
@@ -36,7 +36,7 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		arg.EventName,
 		arg.StartTime,
 		arg.EndTime,
-		arg.ReferenceDate,
+		arg.DayID,
 	)
 	var i Event
 	err := row.Scan(
@@ -46,7 +46,7 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		&i.EventName,
 		&i.StartTime,
 		&i.EndTime,
-		&i.ReferenceDate,
+		&i.DayID,
 	)
 	return i, err
 }
@@ -59,4 +59,40 @@ WHERE event_id=$1
 func (q *Queries) DeleteEvent(ctx context.Context, eventID uuid.UUID) error {
 	_, err := q.db.ExecContext(ctx, deleteEvent, eventID)
 	return err
+}
+
+const getEvents = `-- name: GetEvents :many
+SELECT event_id, created_at, updated_at, event_name, start_time, end_time, day_id FROM events
+WHERE day_id=$1
+`
+
+func (q *Queries) GetEvents(ctx context.Context, dayID uuid.UUID) ([]Event, error) {
+	rows, err := q.db.QueryContext(ctx, getEvents, dayID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Event
+	for rows.Next() {
+		var i Event
+		if err := rows.Scan(
+			&i.EventID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.EventName,
+			&i.StartTime,
+			&i.EndTime,
+			&i.DayID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

@@ -9,7 +9,7 @@ CREATE TABLE events (
     start_time time NOT NULL,
     end_time time NOT NULL,
 
-    reference_date date NOT NULL REFERENCES days(reference_date) ON DELETE CASCADE
+    day_id UUID NOT NULL REFERENCES days(day_id) ON DELETE CASCADE
 );
 
 -- +goose down

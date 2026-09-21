@@ -13,12 +13,13 @@ import (
 )
 
 const createDay = `-- name: CreateDay :one
-INSERT INTO days (reference_date, created_at, updated_at, user_id)
-VALUES ($1, $2, $3, $4)
-RETURNING reference_date, created_at, updated_at, user_id
+INSERT INTO days (day_id, reference_date, created_at, updated_at, user_id)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING day_id, reference_date, created_at, updated_at, user_id
 `
 
 type CreateDayParams struct {
+	DayID         uuid.UUID
 	ReferenceDate time.Time
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
@@ -27,6 +28,7 @@ type CreateDayParams struct {
 
 func (q *Queries) CreateDay(ctx context.Context, arg CreateDayParams) (Day, error) {
 	row := q.db.QueryRowContext(ctx, createDay,
+		arg.DayID,
 		arg.ReferenceDate,
 		arg.CreatedAt,
 		arg.UpdatedAt,
@@ -34,6 +36,7 @@ func (q *Queries) CreateDay(ctx context.Context, arg CreateDayParams) (Day, erro
 	)
 	var i Day
 	err := row.Scan(
+		&i.DayID,
 		&i.ReferenceDate,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -44,21 +47,21 @@ func (q *Queries) CreateDay(ctx context.Context, arg CreateDayParams) (Day, erro
 
 const deleteDay = `-- name: DeleteDay :exec
 DELETE FROM days
-WHERE reference_date=$1
+WHERE day_id=$1
 `
 
-func (q *Queries) DeleteDay(ctx context.Context, referenceDate time.Time) error {
-	_, err := q.db.ExecContext(ctx, deleteDay, referenceDate)
+func (q *Queries) DeleteDay(ctx context.Context, dayID uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteDay, dayID)
 	return err
 }
 
 const getDays = `-- name: GetDays :many
-SELECT reference_date, created_at, updated_at, user_id FROM days
-WHERE reference_date=$1
+SELECT day_id, reference_date, created_at, updated_at, user_id FROM days
+WHERE user_id=$1
 `
 
-func (q *Queries) GetDays(ctx context.Context, referenceDate time.Time) ([]Day, error) {
-	rows, err := q.db.QueryContext(ctx, getDays, referenceDate)
+func (q *Queries) GetDays(ctx context.Context, userID uuid.UUID) ([]Day, error) {
+	rows, err := q.db.QueryContext(ctx, getDays, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -67,6 +70,7 @@ func (q *Queries) GetDays(ctx context.Context, referenceDate time.Time) ([]Day, 
 	for rows.Next() {
 		var i Day
 		if err := rows.Scan(
+			&i.DayID,
 			&i.ReferenceDate,
 			&i.CreatedAt,
 			&i.UpdatedAt,

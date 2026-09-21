@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 
 	"github.com/Apoapsis404/Calendar/internal/database"
@@ -40,5 +42,24 @@ func (app *application) createUserHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	respondWithJSON(w, 200, user)
+	respondWithJSON(w, http.StatusCreated, user)
+}
+
+func (app *application) deleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	userIDStr := chi.URLParam(r, "id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request URL")
+		return
+	}
+
+	err = app.config.DB.DeleteUser(r.Context(), userID)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		log.Println(err)
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, struct{}{})
+
 }

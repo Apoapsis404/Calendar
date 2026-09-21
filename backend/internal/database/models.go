@@ -11,6 +11,7 @@ import (
 )
 
 type Day struct {
+	DayID         uuid.UUID
 	ReferenceDate time.Time
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
@@ -18,13 +19,13 @@ type Day struct {
 }
 
 type Event struct {
-	EventID       uuid.UUID
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	EventName     string
-	StartTime     time.Time
-	EndTime       time.Time
-	ReferenceDate time.Time
+	EventID   uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	EventName string
+	StartTime time.Time
+	EndTime   time.Time
+	DayID     uuid.UUID
 }
 
 type User struct {
