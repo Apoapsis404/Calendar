@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"encoding/json"
@@ -10,10 +10,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 
-	"github.com/Apoapsis404/Calendar/internal/database"
+	"github.com/Apoapsis404/Calendar/cmd/internal/database"
 )
 
-func (app *application) createUserHandler(w http.ResponseWriter, r *http.Request) {
+func (app *Application) createUserHandler(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -28,7 +28,7 @@ func (app *application) createUserHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	user, err := app.config.DB.CreateUser(r.Context(), database.CreateUserParams{
+	user, err := app.Cfg.DB.CreateUser(r.Context(), database.CreateUserParams{
 		UserID:    uuid.New(),
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
@@ -45,7 +45,7 @@ func (app *application) createUserHandler(w http.ResponseWriter, r *http.Request
 	respondWithJSON(w, http.StatusCreated, user)
 }
 
-func (app *application) deleteUserHandler(w http.ResponseWriter, r *http.Request) {
+func (app *Application) deleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	userIDStr := chi.URLParam(r, "id")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
@@ -53,7 +53,7 @@ func (app *application) deleteUserHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = app.config.DB.DeleteUser(r.Context(), userID)
+	err = app.Cfg.DB.DeleteUser(r.Context(), userID)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request body")
 		log.Println(err)

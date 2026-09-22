@@ -1,8 +1,8 @@
 run: build
-	bin/main
+	go run cmd/main.go
 
 build:
-	go build -o bin/main cmd/api/*.go
+	go build -o bin/main cmd/main.go
 
 clean:
 	rm -rf bin

@@ -1,0 +1,24 @@
+services:
+  postgresdb:
+    container_name: calendar-db
+    image: postgres:latest
+    env_file:
+      - .env
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - DATABASE_HOST=${DB_HOST}
+    ports:
+      - "5432:5432"
+
+  # redisdb:
+  #   container_name: go-auth-demo-rdb
+  #   image: redis:6.2-alpine
+  #   restart: on-failure
+  #   ports:
+  #     - "6379:6379"
+  #   command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+  #   volumes:
+  #     - .:/rdb

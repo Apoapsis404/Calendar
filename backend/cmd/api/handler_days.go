@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"database/sql"
@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Apoapsis404/Calendar/internal/database"
+	"github.com/Apoapsis404/Calendar/cmd/internal/database"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
-func (app *application) createDayHandler(w http.ResponseWriter, r *http.Request) {
+func (app *Application) createDayHandler(w http.ResponseWriter, r *http.Request) {
 	userIDStr := chi.URLParam(r, "user_id")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
@@ -23,7 +23,6 @@ func (app *application) createDayHandler(w http.ResponseWriter, r *http.Request)
 	type parameters struct {
 		ReferenceDate string `json:"reference_date"`
 	}
-
 
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -41,11 +40,11 @@ func (app *application) createDayHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	day, err := app.config.DB.CreateDay(r.Context(), database.CreateDayParams{
-		UserID: userID,
-		DayID: uuid.New(),
-		CreatedAt: time.Now().UTC(),
-		UpdatedAt: time.Now().UTC(),
+	day, err := app.Cfg.DB.CreateDay(r.Context(), database.CreateDayParams{
+		UserID:        userID,
+		DayID:         uuid.New(),
+		CreatedAt:     time.Now().UTC(),
+		UpdatedAt:     time.Now().UTC(),
 		ReferenceDate: referenceDate,
 	})
 
@@ -56,10 +55,10 @@ func (app *application) createDayHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	respondWithJSON(w, http.StatusCreated, day)
-	
+
 }
 
-func (app *application) deleteDayHandler(w http.ResponseWriter, r *http.Request) {
+func (app *Application) deleteDayHandler(w http.ResponseWriter, r *http.Request) {
 	dayIDStr := chi.URLParam(r, "day_id")
 	dayID, err := uuid.Parse(dayIDStr)
 	if err != nil {
@@ -68,8 +67,7 @@ func (app *application) deleteDayHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = app.config.DB.DeleteDay(r.Context(), dayID)
-
+	err = app.Cfg.DB.DeleteDay(r.Context(), dayID)
 
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request body")
@@ -78,10 +76,10 @@ func (app *application) deleteDayHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	respondWithJSON(w, http.StatusOK, struct{}{})
-	
+
 }
 
-func (app *application) getDaysHandler(w http.ResponseWriter, r *http.Request) {
+func (app *Application) getDaysHandler(w http.ResponseWriter, r *http.Request) {
 	userIDStr := chi.URLParam(r, "user_id")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
@@ -89,7 +87,7 @@ func (app *application) getDaysHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	days, err := app.config.DB.GetDays(r.Context(), userID)
+	days, err := app.Cfg.DB.GetDays(r.Context(), userID)
 	if err != nil {
 		log.Println(err)
 		if err == sql.ErrNoRows {

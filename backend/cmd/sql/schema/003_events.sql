@@ -6,6 +6,8 @@ CREATE TABLE events (
     updated_at TIMESTAMP NOT NULL,
 
     event_name VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    recurring INT NOT NULL, 
     start_time time NOT NULL,
     end_time time NOT NULL,
 

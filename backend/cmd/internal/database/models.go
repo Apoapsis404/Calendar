@@ -19,13 +19,15 @@ type Day struct {
 }
 
 type Event struct {
-	EventID   uuid.UUID
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	EventName string
-	StartTime time.Time
-	EndTime   time.Time
-	DayID     uuid.UUID
+	EventID     uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	EventName   string
+	Description string
+	Recurring   int32
+	StartTime   time.Time
+	EndTime     time.Time
+	DayID       uuid.UUID
 }
 
 type User struct {

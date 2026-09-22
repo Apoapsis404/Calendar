@@ -1,25 +1,25 @@
-package main
+package api
 
 import (
 	"log"
 	"net/http"
 	"time"
 
-	"github.com/Apoapsis404/Calendar/internal/database"
+	"github.com/Apoapsis404/Calendar/cmd/internal/database"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-type application struct {
-	config config
+type Application struct {
+	Cfg Config
 }
 
-type config struct {
-	addr string
+type Config struct {
+	ADDR string
 	DB   *database.Queries
 }
 
-func (app *application) mount() http.Handler {
+func (app *Application) Mount() http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -37,22 +37,23 @@ func (app *application) mount() http.Handler {
 		r.Post("/events", app.createEventHandler)
 		r.Delete("/events/{event_id}", app.deleteEventHandler)
 		r.Get("/events/{day_id}", app.getEventsHandler)
+		r.Patch("/events/{event_id}", app.updateEventHandler)
 
 	})
 
 	return r
 }
 
-func (app *application) run(mux http.Handler) error {
+func (app *Application) Run(mux http.Handler) error {
 	srv := &http.Server{
-		Addr:         app.config.addr,
+		Addr:         app.Cfg.ADDR,
 		Handler:      mux,
 		WriteTimeout: time.Second * 30,
 		ReadTimeout:  time.Second * 10,
 		IdleTimeout:  time.Minute,
 	}
 
-	log.Printf("Server has started at %s\n", app.config.addr)
+	log.Printf("Server has started at %s\n", app.Cfg.ADDR)
 
 	return srv.ListenAndServe()
 }
