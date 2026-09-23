@@ -10,7 +10,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 
+	"github.com/Apoapsis404/Calendar/cmd/internal/auth"
 	"github.com/Apoapsis404/Calendar/cmd/internal/database"
+	"github.com/Apoapsis404/Calendar/cmd/models"
 )
 
 func (app *Application) createUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -28,12 +30,19 @@ func (app *Application) createUserHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	hashedPassword, err := auth.HashPassword(params.Password)
+	if err != nil {
+		log.Println(err)
+		respondWithError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
 	user, err := app.Cfg.DB.CreateUser(r.Context(), database.CreateUserParams{
 		UserID:    uuid.New(),
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
 		Username:  params.Username,
-		Password:  params.Password,
+		Password:  hashedPassword,
 		Email:     params.Email,
 	})
 
@@ -42,7 +51,7 @@ func (app *Application) createUserHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, user)
+	respondWithJSON(w, http.StatusCreated, models.DatabaseUserToUser(user))
 }
 
 func (app *Application) deleteUserHandler(w http.ResponseWriter, r *http.Request) {

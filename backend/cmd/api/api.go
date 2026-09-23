@@ -15,8 +15,9 @@ type Application struct {
 }
 
 type Config struct {
-	ADDR string
-	DB   *database.Queries
+	ADDR   string
+	DB     *database.Queries
+	Secret string
 }
 
 func (app *Application) Mount() http.Handler {

@@ -38,15 +38,23 @@ func main() {
 		dbName,
 	)
 
+	secretKey := os.Getenv("SECRET")
+	if secretKey == "" {
+		log.Fatal("Missing authentication secret in enviornment veriables")
+	}
+
 	conn, err := sql.Open("postgres", dsn)
 	if err != nil {
 		log.Fatal("cannot connect to database", err)
 	}
 	defer conn.Close()
 
+	log.Println("Connected to database")
+
 	cfg := api.Config{
-		ADDR: ":8080",
-		DB:   database.New(conn),
+		ADDR:   ":8080",
+		DB:     database.New(conn),
+		Secret: secretKey,
 	}
 
 	app := &api.Application{
