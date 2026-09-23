@@ -75,9 +75,8 @@ func (app *Application) deleteUserHandler(w http.ResponseWriter, r *http.Request
 
 func (app *Application) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Username         string `json:"username"`
-		Password         string `json:"password"`
-		ExpiresInSeconds int    `json:"expires_in_seconds,omitempty"`
+		Username string `json:"username"`
+		Password string `json:"password"`
 	}
 
 	params := parameters{}
@@ -102,19 +101,23 @@ func (app *Application) loginUserHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	var expirationTime time.Duration
-	if params.ExpiresInSeconds == 0 {
-		expirationTime = time.Hour
-	} else {
-		expirationTime = time.Second * time.Duration(params.ExpiresInSeconds)
-	}
+	expirationTime := time.Hour
 
-	token, err := auth.MakeJWT(user.UserID, app.Cfg.Secret, expirationTime)
+	accessToken, err := auth.MakeJWT(user.UserID, app.Cfg.Secret, expirationTime)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Internal server error")
 		log.Println(err)
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, models.DatabaseUserToLoginUser(user, token))
+	refreshToken := auth.MakeRefreshToken()
+	app.Cfg.DB.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
+		Token:     refreshToken,
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+		UserID:    user.UserID,
+		ExpiresAt: time.Now().UTC().Add(time.Hour * 24 * 7),
+	})
+
+	respondWithJSON(w, http.StatusOK, models.DatabaseUserToLoginUser(user, accessToken, refreshToken))
 }

@@ -41,6 +41,8 @@ func (app *Application) Mount() http.Handler {
 		r.Get("/events/{day_id}", app.getEventsHandler)
 		r.Patch("/events/{event_id}", app.updateEventHandler)
 
+		r.Post("/refresh", app.CreateAccessTokenHandler)
+		r.Delete("/refresh", app.DeleteRefreshTokenHandler)
 	})
 
 	return r
