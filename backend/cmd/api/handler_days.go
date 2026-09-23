@@ -16,6 +16,7 @@ func (app *Application) createDayHandler(w http.ResponseWriter, r *http.Request)
 	userIDStr := chi.URLParam(r, "user_id")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
+		log.Println(err)
 		respondWithError(w, http.StatusBadRequest, "Invalid request URL")
 		return
 	}
@@ -83,6 +84,7 @@ func (app *Application) getDaysHandler(w http.ResponseWriter, r *http.Request) {
 	userIDStr := chi.URLParam(r, "user_id")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
+		log.Println(err)
 		respondWithError(w, http.StatusBadRequest, "Invalid request URL")
 		return
 	}

@@ -29,17 +29,17 @@ func (app *Application) Mount() http.Handler {
 		r.Get("/health", app.healthCheckHandler)
 
 		r.Post("/users", app.createUserHandler)
-		r.Delete("/users/{id}", app.deleteUserHandler)
 		r.Get("/users", app.loginUserHandler)
+		r.Delete("/users/{id}", app.middlewareAuth(app.deleteUserHandler))
 
-		r.Post("/days/{user_id}", app.createDayHandler)
-		r.Delete("/days/{day_id}", app.deleteDayHandler)
-		r.Get("/days/{user_id}", app.getDaysHandler)
+		r.Post("/days/{user_id}", app.middlewareAuth(app.createDayHandler))
+		r.Delete("/days/{day_id}", app.middlewareAuth(app.deleteDayHandler))
+		r.Get("/days/{user_id}", app.middlewareAuth(app.getDaysHandler))
 
-		r.Post("/events", app.createEventHandler)
-		r.Delete("/events/{event_id}", app.deleteEventHandler)
-		r.Get("/events/{day_id}", app.getEventsHandler)
-		r.Patch("/events/{event_id}", app.updateEventHandler)
+		r.Post("/events", app.middlewareAuth(app.createEventHandler))
+		r.Delete("/events/{event_id}", app.middlewareAuth(app.deleteEventHandler))
+		r.Get("/events/{day_id}", app.middlewareAuth(app.getEventsHandler))
+		r.Patch("/events/{event_id}", app.middlewareAuth(app.updateEventHandler))
 
 		r.Post("/refresh", app.CreateAccessTokenHandler)
 		r.Delete("/refresh", app.DeleteRefreshTokenHandler)
