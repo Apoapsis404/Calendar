@@ -72,3 +72,49 @@ func (app *Application) deleteUserHandler(w http.ResponseWriter, r *http.Request
 	respondWithJSON(w, http.StatusOK, struct{}{})
 
 }
+
+func (app *Application) loginUserHandler(w http.ResponseWriter, r *http.Request) {
+	type parameters struct {
+		Username         string `json:"username"`
+		Password         string `json:"password"`
+		ExpiresInSeconds int    `json:"expires_in_seconds,omitempty"`
+	}
+
+	params := parameters{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&params)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	user, err := app.Cfg.DB.LoginUser(r.Context(), params.Username)
+	if err != nil {
+		log.Println(err)
+		respondWithError(w, http.StatusUnauthorized, "Invalid username or password")
+		return
+	}
+
+	err = auth.CheckPasswordHash(params.Password, user.Password)
+	if err != nil {
+		log.Println(err)
+		respondWithError(w, http.StatusUnauthorized, "Invalid username or password")
+		return
+	}
+
+	var expirationTime time.Duration
+	if params.ExpiresInSeconds == 0 {
+		expirationTime = time.Hour
+	} else {
+		expirationTime = time.Second * time.Duration(params.ExpiresInSeconds)
+	}
+
+	token, err := auth.MakeJWT(user.UserID, app.Cfg.Secret, expirationTime)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Internal server error")
+		log.Println(err)
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, models.DatabaseUserToLoginUser(user, token))
+}

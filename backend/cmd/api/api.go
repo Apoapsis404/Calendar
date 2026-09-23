@@ -30,6 +30,7 @@ func (app *Application) Mount() http.Handler {
 
 		r.Post("/users", app.createUserHandler)
 		r.Delete("/users/{id}", app.deleteUserHandler)
+		r.Get("/users", app.loginUserHandler)
 
 		r.Post("/days/{user_id}", app.createDayHandler)
 		r.Delete("/days/{day_id}", app.deleteDayHandler)

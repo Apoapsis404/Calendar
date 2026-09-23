@@ -5,3 +5,7 @@ RETURNING *;
 
 -- name: DeleteUser :exec
 DELETE FROM users WHERE user_id=$1;
+
+-- name: LoginUser :one
+SELECT * FROM users
+WHERE username=$1;

@@ -19,3 +19,19 @@ func DatabaseUserToUser(dbUser database.User) User {
 		Email:     dbUser.Email,
 	}
 }
+
+type LoginUser struct {
+	UserID   string `json:"user_id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Token    string `json:"token"`
+}
+
+func DatabaseUserToLoginUser(dbUser database.User, token string) LoginUser {
+	return LoginUser{
+		UserID:   dbUser.UserID.String(),
+		Username: dbUser.Username,
+		Email:    dbUser.Email,
+		Token:    token,
+	}
+}
