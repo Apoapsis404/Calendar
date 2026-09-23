@@ -44,3 +44,11 @@ func GetBearerToken(headers http.Header) (string, error) {
 	}
 	return authHeader[len(expectedPrefix):], nil
 }
+
+func GetAccessToken(r *http.Request) (string, error) {
+	token, err := r.Cookie("access_token")
+	if err != nil {
+		return "", err
+	}
+	return token.Value, nil
+}

@@ -69,6 +69,18 @@ func (app *Application) deleteUserHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	expiredCookie := &http.Cookie{
+		Name:     "access_token",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	http.SetCookie(w, expiredCookie)
+
 	respondWithJSON(w, http.StatusOK, struct{}{})
 
 }
@@ -111,7 +123,7 @@ func (app *Application) loginUserHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	refreshToken := auth.MakeRefreshToken()
-	app.Cfg.DB.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
+	_, err = app.Cfg.DB.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
 		Token:     refreshToken,
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
@@ -119,5 +131,22 @@ func (app *Application) loginUserHandler(w http.ResponseWriter, r *http.Request)
 		ExpiresAt: time.Now().UTC().Add(time.Hour * 24 * 7),
 	})
 
-	respondWithJSON(w, http.StatusOK, models.DatabaseUserToLoginUser(user, accessToken, refreshToken))
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	cookie := &http.Cookie{
+		Name:     "access_token",
+		Value:    accessToken,
+		Path:     "/",
+		Expires:  time.Now().Add(expirationTime),
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+
+	http.SetCookie(w, cookie)
+
+	respondWithJSON(w, http.StatusOK, models.DatabaseUserToLoginUser(user, refreshToken))
 }
