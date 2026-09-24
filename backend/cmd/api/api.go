@@ -39,8 +39,8 @@ func (app *Application) Mount() http.Handler {
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
 
-		r.Post("/users", app.createUserHandler)
-		r.Get("/users", app.loginUserHandler)
+		r.Post("/register", app.createUserHandler)
+		r.Post("/login", app.loginUserHandler)
 		r.Delete("/users/{id}", app.middlewareAuth(app.deleteUserHandler))
 
 		r.Post("/days/{user_id}", app.middlewareAuth(app.createDayHandler))

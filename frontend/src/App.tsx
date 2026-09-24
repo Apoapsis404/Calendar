@@ -1,15 +1,27 @@
+// import { Routes } from "react-router-dom";
 import "./css/App.css";
-import { getHealth } from "./services/api";
+import { login, type LoginData } from "./api/services/auth";
 
 function App() {
-  async function onHealthClick() {
-    const health = await getHealth();
-    console.log(health);
+  function onLoginClick() {
+    const loginData: LoginData = {
+      username: "test user",
+      password: "testpass",
+    };
+
+    login(loginData)
+      .then((response) => {
+        console.log("Login successful:", response);
+        localStorage.setItem("token", response.refreshToken);
+      })
+      .catch((error) => {
+        console.error("Login failed:", error);
+      });
   }
 
   return (
     <div>
-      <button onClick={onHealthClick}>health</button>
+      <button onClick={onLoginClick}>Login</button>
     </div>
   );
 }
