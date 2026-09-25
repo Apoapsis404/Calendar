@@ -1,34 +1,55 @@
 import { useEffect, useState } from "react";
-import { getDays } from "../../api/services/calendar";
-import { addMonths } from "date-fns";
+import {
+  addDays,
+  addMonths,
+  endOfMonth,
+  endOfWeek,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
 import { CalendarMonth } from "./components/CalendarMonth";
-import { getDatesForMonthFromLocalStorage } from "./hooks/getDays";
+import { getCurrentUserIdFromStorage, useGetDays } from "./hooks/getDays";
 
 export const Calendar = () => {
-  const [monthOffset, setMonthOffset] = useState(0);
+  const [monthOffset] = useState(-1);
   const month = addMonths(new Date(), monthOffset);
-  const visibleDates = Array.from({ length: 30 }, (_, i) => {
-    const date = new Date(month.getFullYear(), month.getMonth(), i + 1);
-    return date;
-  });
+  const monthStart = startOfMonth(month);
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+  const visibleDates = Array.from({ length: 42 }, (_, index) =>
+    addDays(calendarStart, index),
+  );
+  // const currentMonthKey = format(month, "yyyy-MM");
+  const { days, loading, error } = useGetDays(getCurrentUserIdFromStorage());
 
-  useEffect(() => {
-    try {
-      console.log("Hello");
-      getDays();
-    } catch (err) {
-      console.error("Error fetching days:", err);
-    }
-  }, []);
+  if (loading) return <div>Loading</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  // useEffect(() => {
+  //   const userId = getCurrentUserIdFromStorage();
+
+  //   if (!userId) {
+  //     return;
+  //   }
+
+  //   const loadDays = async () => {
+  //     try {
+  //       const days = await getDays();
+  //       saveDatesToLocalStorage(days, userId);
+  //     } catch (err) {
+  //       console.error("Error fetching days:", err);
+  //     }
+  //   };
+
+  //   void loadDays();
+  // }, []);
 
   return (
     <div>
       <h1>Calendar</h1>
       <CalendarMonth
         visibleDates={visibleDates}
-        daysByMonth={getDatesForMonthFromLocalStorage(
-          month.toISOString().slice(0, 7),
-        )}
+        daysByMonth={days}
+        currentMonth={month}
       />
     </div>
   );

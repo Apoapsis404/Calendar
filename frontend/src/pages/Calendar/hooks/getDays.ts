@@ -9,18 +9,23 @@ export interface DayResult {
 
 const CALENDAR_DAYS_STORAGE_KEY = "calendarDays";
 
-export const getCurrentUserIdFromStorage = (): string | null => {
+export const getCurrentUserIdFromStorage = (): string => {
   const loginUser = localStorage.getItem("loginUser");
 
   if (!loginUser) {
-    return null;
+    throw new Error("No loginUser found in localStorage");
   }
 
   try {
     const parsedUser = JSON.parse(loginUser) as { user_id?: string | null };
-    return parsedUser.user_id ?? null;
+    return (
+      parsedUser.user_id ??
+      (() => {
+        throw new Error("No user_id found in loginUser");
+      })()
+    );
   } catch {
-    return null;
+    throw new Error("Failed to parse loginUser from localStorage");
   }
 };
 
