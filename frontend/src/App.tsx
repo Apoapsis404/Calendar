@@ -14,6 +14,7 @@ function App() {
     <div style={{ padding: 24, fontFamily: "ui-sans-serif, system-ui" }}>
       <header style={{ display: "flex", gap: 12, marginBottom: 16 }}>
         <Link to="/">Home</Link>
+        <Link to="/register">Register</Link>
         <Link to="/login">Login</Link>
         <button onClick={() => setIsModalOpen(true)}>Logout</button>
       </header>

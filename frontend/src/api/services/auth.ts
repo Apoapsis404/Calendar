@@ -27,3 +27,27 @@ export const logout = async (): Promise<void> => {
     headers: { Authorization: `Bearer ${refreshToken}` },
   });
 };
+
+export interface RegisterUserData {
+  username: string;
+  email: string;
+  password: string;
+}
+
+export interface RegisterUserResponse {
+  user_id: string;
+  username: string;
+  email: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const register = async (
+  registerData: RegisterUserData,
+): Promise<RegisterUserResponse> => {
+  const response = await api.post<RegisterUserResponse>(
+    `/register`,
+    registerData,
+  );
+  return response.data;
+};
