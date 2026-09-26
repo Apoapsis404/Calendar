@@ -6,7 +6,7 @@ import { getCurrentUserIdFromStorage } from "../../context/getUserID";
 import { getEventsInMonth } from "./getEventsInMonth";
 
 export const Calendar = () => {
-  const [monthOffset] = useState(0);
+  const [monthOffset, setMonthOffset] = useState(0);
   const month = addMonths(new Date(), monthOffset);
   const monthStart = startOfMonth(month);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
@@ -23,15 +23,35 @@ export const Calendar = () => {
   if (loading) return <div>Loading</div>;
   if (error) return <div>Error: {error.message}</div>;
 
+  const onPrevMonth = () => {
+    setMonthOffset((prevOffset) => prevOffset - 1);
+  };
+
+  const onNextMonth = () => {
+    setMonthOffset((prevOffset) => prevOffset + 1);
+  };
+
   return (
     <div>
       <h1>Calendar</h1>
       <div>
-        <CalendarMonth
-          visibleDates={visibleDates}
-          eventsInMonth={eventsInMonth}
-          currentMonth={month}
-        />
+        <div>
+          <button onClick={onPrevMonth}>Prev</button>
+          <h2 style={{ margin: "0 0 8px" }}>
+            {month.toLocaleString("default", {
+              month: "long",
+              year: "numeric",
+            })}
+          </h2>
+          <button onClick={onNextMonth}>Next</button>
+        </div>
+        <div>
+          <CalendarMonth
+            visibleDates={visibleDates}
+            eventsInMonth={eventsInMonth}
+            currentMonth={month}
+          />
+        </div>
       </div>
     </div>
   );

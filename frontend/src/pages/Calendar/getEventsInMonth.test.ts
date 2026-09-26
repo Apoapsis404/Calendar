@@ -71,4 +71,21 @@ describe("getEventsInMonth", () => {
       ["2026-09-01", "2026-09-08", "2026-09-15", "2026-09-22", "2026-09-29"],
     );
   });
+
+  it("parses PostgreSQL timestamp strings with duplicated timezone offsets", () => {
+    const month = new Date("2026-09-01T00:00:00Z");
+    const event = makeEvent({
+      event_id: "timestamp-1",
+      recurring: "weekly",
+      start_time: "2026-09-25 12:00:00 +0000 +0000",
+      end_time: "2026-09-25 13:00:00 +0000 +0000",
+    });
+
+    const events = getEventsInMonth(month, [event]);
+
+    assert.deepEqual(
+      events.map((item) => item.start_time.slice(0, 10)),
+      ["2026-09-25"],
+    );
+  });
 });

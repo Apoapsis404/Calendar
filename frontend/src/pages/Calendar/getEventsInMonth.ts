@@ -1,5 +1,36 @@
 import type { CalendarEvent } from "../../api/services/calendar";
 
+const parseEventDate = (value: string): Date | null => {
+  if (!value) return null;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const withoutDuplicateOffset = trimmed.replace(
+    /([+-]\d{2})(\d{2})\s+([+-]\d{2})(\d{2})$/,
+    "$1$2",
+  );
+  const withoutUtcText = withoutDuplicateOffset.replace(/\s+UTC$/i, "");
+  const withNormalizedOffset = withoutUtcText.replace(
+    /\s+([+-])(\d{2})(\d{2})$/,
+    " $1$2:$3",
+  );
+
+  const isoCandidate = withNormalizedOffset.includes("T")
+    ? withNormalizedOffset
+    : withNormalizedOffset.replace(
+        /^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})(?:\s+([+-]\d{2}:\d{2}))?$/,
+        "$1T$2$3",
+      );
+
+  const finalCandidate = /[Zz]|[+-]\d{2}:\d{2}$/.test(isoCandidate)
+    ? isoCandidate
+    : `${isoCandidate}Z`;
+
+  const parsed = new Date(finalCandidate);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
 const addDays = (date: Date, days: number): Date =>
   new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 
@@ -62,12 +93,12 @@ const shiftEventTime = (
   event: CalendarEvent,
   occurrenceStart: Date,
 ): CalendarEvent => {
-  const originalStart = new Date(event.start_time);
-  const originalEnd = new Date(event.end_time);
-  const durationMs = Math.max(
-    0,
-    originalEnd.getTime() - originalStart.getTime(),
-  );
+  const originalStart = parseEventDate(event.start_time);
+  const originalEnd = parseEventDate(event.end_time);
+  const durationMs =
+    originalStart && originalEnd
+      ? Math.max(0, originalEnd.getTime() - originalStart.getTime())
+      : 0;
 
   return {
     ...event,
@@ -81,8 +112,12 @@ const collectOccurrences = (
   monthStart: Date,
   monthEnd: Date,
 ): Date[] => {
-  const baseStart = new Date(event.start_time);
+  const baseStart = parseEventDate(event.start_time);
   const occurrences: Date[] = [];
+
+  if (!baseStart) {
+    return occurrences;
+  }
 
   if (event.recurring === "daily") {
     let occurrence = new Date(baseStart.getTime());
@@ -177,8 +212,8 @@ export const getEventsInMonth = (
       continue;
     }
 
-    const baseStart = new Date(event.start_time);
-    if (Number.isNaN(baseStart.getTime())) {
+    const baseStart = parseEventDate(event.start_time);
+    if (!baseStart) {
       continue;
     }
 

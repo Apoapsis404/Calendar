@@ -1,4 +1,5 @@
 import type { CalendarEvent } from "../../../api/services/calendar";
+import { formatLocalDateKey } from "../formatLocalDateKey";
 import { CalendarItem } from "./CalendarItem";
 
 type CalendarMonthProps = {
@@ -14,39 +15,32 @@ export function CalendarMonth({
   eventsInMonth,
   currentMonth,
 }: CalendarMonthProps) {
+  const todayKey = formatLocalDateKey(new Date());
+
   return (
     <div>
-      <div>
-        <h2 style={{ margin: "0 0 8px" }}>
-          {currentMonth.toLocaleString("default", {
-            month: "long",
-            year: "numeric",
-          })}
-        </h2>
-      </div>
       <div
+        className="grid w-full grid-cols-7 gap-2"
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-          gap: "8px",
-          width: "100%",
-          maxWidth: "760px",
+          gridTemplateRows: "repeat(6, minmax(0, 1fr))",
+          gridAutoRows: "minmax(88px, 1fr)",
         }}
       >
         {weekdayNames.map((weekday) => (
-          <div key={weekday} style={{ textAlign: "center", fontWeight: 600 }}>
+          <div key={weekday} className="text-center font-bold">
             {weekday}
           </div>
         ))}
 
         {visibleDates.map((date) => {
-          const isoDate = date.toISOString().split("T")[0];
+          const isoDate = formatLocalDateKey(date);
           const events = eventsInMonth.filter(
             (event) => event.start_time.slice(0, 10) === isoDate,
           );
           const isCurrentMonth =
             date.getFullYear() === currentMonth.getFullYear() &&
             date.getMonth() === currentMonth.getMonth();
+          const isToday = isoDate === todayKey;
 
           return (
             <CalendarItem
@@ -54,6 +48,7 @@ export function CalendarMonth({
               events={events.length ? events : null}
               date={isoDate}
               isCurrentMonth={isCurrentMonth}
+              isToday={isToday}
             />
           );
         })}
