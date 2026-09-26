@@ -76,7 +76,7 @@ func (app *Application) deleteUserHandler(w http.ResponseWriter, r *http.Request
 		Expires:  time.Unix(0, 0),
 		MaxAge:   -1,
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   false,
 		SameSite: http.SameSiteLaxMode,
 	}
 	http.SetCookie(w, expiredCookie)
@@ -142,7 +142,7 @@ func (app *Application) loginUserHandler(w http.ResponseWriter, r *http.Request)
 		Path:     "/",
 		Expires:  time.Now().Add(expirationTime),
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   false,
 		SameSite: http.SameSiteLaxMode,
 	}
 

@@ -7,27 +7,29 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 const createEvent = `-- name: CreateEvent :one
-INSERT INTO events (event_id, created_at, updated_at, event_name, description, recurring, start_time, end_time, day_id)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-RETURNING event_id, created_at, updated_at, event_name, description, recurring, start_time, end_time, day_id
+INSERT INTO events (event_id, created_at, updated_at, event_name, description, recurring, custom_recurring, start_time, end_time, user_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+RETURNING event_id, created_at, updated_at, event_name, description, recurring, custom_recurring, start_time, end_time, user_id
 `
 
 type CreateEventParams struct {
-	EventID     uuid.UUID
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	EventName   string
-	Description string
-	Recurring   int32
-	StartTime   time.Time
-	EndTime     time.Time
-	DayID       uuid.UUID
+	EventID         uuid.UUID
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	EventName       string
+	Description     string
+	Recurring       NullRecurringType
+	CustomRecurring sql.NullInt32
+	StartTime       time.Time
+	EndTime         time.Time
+	UserID          uuid.UUID
 }
 
 func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error) {
@@ -38,9 +40,10 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		arg.EventName,
 		arg.Description,
 		arg.Recurring,
+		arg.CustomRecurring,
 		arg.StartTime,
 		arg.EndTime,
-		arg.DayID,
+		arg.UserID,
 	)
 	var i Event
 	err := row.Scan(
@@ -50,9 +53,10 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		&i.EventName,
 		&i.Description,
 		&i.Recurring,
+		&i.CustomRecurring,
 		&i.StartTime,
 		&i.EndTime,
-		&i.DayID,
+		&i.UserID,
 	)
 	return i, err
 }
@@ -68,12 +72,12 @@ func (q *Queries) DeleteEvent(ctx context.Context, eventID uuid.UUID) error {
 }
 
 const getEvents = `-- name: GetEvents :many
-SELECT event_id, created_at, updated_at, event_name, description, recurring, start_time, end_time, day_id FROM events
-WHERE day_id=$1
+SELECT event_id, created_at, updated_at, event_name, description, recurring, custom_recurring, start_time, end_time, user_id FROM events
+WHERE user_id=$1
 `
 
-func (q *Queries) GetEvents(ctx context.Context, dayID uuid.UUID) ([]Event, error) {
-	rows, err := q.db.QueryContext(ctx, getEvents, dayID)
+func (q *Queries) GetEvents(ctx context.Context, userID uuid.UUID) ([]Event, error) {
+	rows, err := q.db.QueryContext(ctx, getEvents, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -88,9 +92,10 @@ func (q *Queries) GetEvents(ctx context.Context, dayID uuid.UUID) ([]Event, erro
 			&i.EventName,
 			&i.Description,
 			&i.Recurring,
+			&i.CustomRecurring,
 			&i.StartTime,
 			&i.EndTime,
-			&i.DayID,
+			&i.UserID,
 		); err != nil {
 			return nil, err
 		}
@@ -111,19 +116,21 @@ SET updated_at=$2,
     event_name=$3,
     description=$4,
     recurring=$5,
-    start_time=$6,
-    end_time=$7
+    custom_recurring=$6,
+    start_time=$7,
+    end_time=$8
 WHERE event_id=$1
 `
 
 type UpdateEventParams struct {
-	EventID     uuid.UUID
-	UpdatedAt   time.Time
-	EventName   string
-	Description string
-	Recurring   int32
-	StartTime   time.Time
-	EndTime     time.Time
+	EventID         uuid.UUID
+	UpdatedAt       time.Time
+	EventName       string
+	Description     string
+	Recurring       NullRecurringType
+	CustomRecurring sql.NullInt32
+	StartTime       time.Time
+	EndTime         time.Time
 }
 
 func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) error {
@@ -133,6 +140,7 @@ func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) error 
 		arg.EventName,
 		arg.Description,
 		arg.Recurring,
+		arg.CustomRecurring,
 		arg.StartTime,
 		arg.EndTime,
 	)

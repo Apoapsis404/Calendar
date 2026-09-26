@@ -32,6 +32,7 @@ export const useLoginUser = (
       const response = await login(loginUserData);
       setLoginUser(response);
       localStorage.setItem("loginUser", JSON.stringify(response));
+      localStorage.setItem("userId", response.user_id);
     } catch (err) {
       setError(
         err instanceof Error ? err : new Error("An unknown error occurred"),

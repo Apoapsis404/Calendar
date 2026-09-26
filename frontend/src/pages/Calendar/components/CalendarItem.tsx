@@ -1,13 +1,13 @@
-import type { Day } from "../../../api/services/calendar";
+import type { CalendarEvent } from "../../../api/services/calendar";
 
 type CalendarItemProps = {
-  day: Day | null;
+  events: CalendarEvent[] | null;
   date: string;
   isCurrentMonth: boolean;
 };
 
 export const CalendarItem = ({
-  day,
+  events,
   date,
   isCurrentMonth,
 }: CalendarItemProps) => {
@@ -21,7 +21,7 @@ export const CalendarItem = ({
         borderRadius: "8px",
         padding: "8px",
         backgroundColor: isCurrentMonth
-          ? day
+          ? events?.length
             ? "#f3f8ff"
             : "#fff"
           : "#f1f1f1",
@@ -37,7 +37,14 @@ export const CalendarItem = ({
       >
         {dayNumber}
       </p>
-      {day && <p style={{ margin: "6px 0 0" }}>Hello</p>}
+      {events?.slice(0, 3).map((event) => (
+        <p
+          key={`${event.event_id}-${event.start_time}`}
+          style={{ margin: "6px 0 0" }}
+        >
+          {event.event_name}
+        </p>
+      ))}
     </div>
   );
 };

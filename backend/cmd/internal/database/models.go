@@ -6,29 +6,68 @@ package database
 
 import (
 	"database/sql"
+	"database/sql/driver"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-type Day struct {
-	DayID         uuid.UUID
-	ReferenceDate time.Time
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	UserID        uuid.UUID
+type RecurringType string
+
+const (
+	RecurringTypeDaily   RecurringType = "daily"
+	RecurringTypeWeekly  RecurringType = "weekly"
+	RecurringTypeMonthly RecurringType = "monthly"
+	RecurringTypeYearly  RecurringType = "yearly"
+)
+
+func (e *RecurringType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = RecurringType(s)
+	case string:
+		*e = RecurringType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for RecurringType: %T", src)
+	}
+	return nil
+}
+
+type NullRecurringType struct {
+	RecurringType RecurringType
+	Valid         bool // Valid is true if RecurringType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullRecurringType) Scan(value interface{}) error {
+	if value == nil {
+		ns.RecurringType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.RecurringType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullRecurringType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.RecurringType), nil
 }
 
 type Event struct {
-	EventID     uuid.UUID
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	EventName   string
-	Description string
-	Recurring   int32
-	StartTime   time.Time
-	EndTime     time.Time
-	DayID       uuid.UUID
+	EventID         uuid.UUID
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	EventName       string
+	Description     string
+	Recurring       NullRecurringType
+	CustomRecurring sql.NullInt32
+	StartTime       time.Time
+	EndTime         time.Time
+	UserID          uuid.UUID
 }
 
 type RefreshToken struct {

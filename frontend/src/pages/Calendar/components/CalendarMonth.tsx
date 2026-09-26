@@ -1,9 +1,9 @@
-import type { Day } from "../../../api/services/calendar";
+import type { CalendarEvent } from "../../../api/services/calendar";
 import { CalendarItem } from "./CalendarItem";
 
 type CalendarMonthProps = {
   visibleDates: Date[];
-  daysByMonth: Day[];
+  eventsInMonth: CalendarEvent[];
   currentMonth: Date;
 };
 
@@ -11,11 +11,19 @@ const weekdayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export function CalendarMonth({
   visibleDates,
-  daysByMonth,
+  eventsInMonth,
   currentMonth,
 }: CalendarMonthProps) {
   return (
     <div>
+      <div>
+        <h2 style={{ margin: "0 0 8px" }}>
+          {currentMonth.toLocaleString("default", {
+            month: "long",
+            year: "numeric",
+          })}
+        </h2>
+      </div>
       <div
         style={{
           display: "grid",
@@ -33,7 +41,9 @@ export function CalendarMonth({
 
         {visibleDates.map((date) => {
           const isoDate = date.toISOString().split("T")[0];
-          const day = daysByMonth.find((d) => d.reference_date === isoDate);
+          const events = eventsInMonth.filter(
+            (event) => event.start_time.slice(0, 10) === isoDate,
+          );
           const isCurrentMonth =
             date.getFullYear() === currentMonth.getFullYear() &&
             date.getMonth() === currentMonth.getMonth();
@@ -41,7 +51,7 @@ export function CalendarMonth({
           return (
             <CalendarItem
               key={`${isoDate}-${date.getHours()}`}
-              day={day ?? null}
+              events={events.length ? events : null}
               date={isoDate}
               isCurrentMonth={isCurrentMonth}
             />

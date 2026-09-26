@@ -1,24 +1,27 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/Apoapsis404/Calendar/cmd/internal/database"
+	"github.com/Apoapsis404/Calendar/cmd/models"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
 func (app *Application) createEventHandler(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		DayID       string `json:"day_id"`
-		EventName   string `json:"event_name"`
-		Description string `json:"description"`
-		Recurring   int32  `json:"recurring"`
-		StartTime   string `json:"start_time"`
-		EndTime     string `json:"end_time"`
+		DayID           string `json:"user_id"`
+		EventName       string `json:"event_name"`
+		Description     string `json:"description"`
+		Recurring       string `json:"recurring,omitempty"`
+		CustomRecurring int32  `json:"custom_recurring,omitempty"`
+		StartTime       string `json:"start_time"`
+		EndTime         string `json:"end_time"`
 	}
 
 	params := parameters{}
@@ -31,24 +34,32 @@ func (app *Application) createEventHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	dayID, err := uuid.Parse(params.DayID)
+	userID, err := uuid.Parse(params.DayID)
 	if err != nil {
 		log.Println(err)
 		respondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	startTime, err := time.Parse("15:04", params.StartTime)
+	startTime, err := time.Parse("2006-01-02T15:04:00", params.StartTime)
 	if err != nil {
 		log.Println(err)
 		respondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-	endTime, err := time.Parse("15:04", params.StartTime)
+	endTime, err := time.Parse("2006-01-02T15:04:00", params.EndTime)
 	if err != nil {
 		log.Println(err)
 		respondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
+	}
+
+	recurring := database.NullRecurringType{}
+	if params.Recurring == "" {
+		recurring.Valid = false
+	} else {
+		recurring.Valid = true
+		recurring.RecurringType = database.RecurringType(params.Recurring)
 	}
 
 	event, err := app.Cfg.DB.CreateEvent(r.Context(), database.CreateEventParams{
@@ -57,10 +68,14 @@ func (app *Application) createEventHandler(w http.ResponseWriter, r *http.Reques
 		UpdatedAt:   time.Now().UTC(),
 		EventName:   params.EventName,
 		Description: params.Description,
-		Recurring:   params.Recurring,
-		StartTime:   startTime,
-		EndTime:     endTime,
-		DayID:       dayID,
+		Recurring:   recurring,
+		CustomRecurring: sql.NullInt32{
+			Int32: params.CustomRecurring,
+			Valid: params.CustomRecurring != 0,
+		},
+		StartTime: startTime,
+		EndTime:   endTime,
+		UserID:    userID,
 	})
 
 	if err != nil {
@@ -69,7 +84,7 @@ func (app *Application) createEventHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, event)
+	respondWithJSON(w, http.StatusCreated, models.DatabaseEventToEvent(event))
 }
 
 func (app *Application) deleteEventHandler(w http.ResponseWriter, r *http.Request) {
@@ -91,14 +106,14 @@ func (app *Application) deleteEventHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *Application) getEventsHandler(w http.ResponseWriter, r *http.Request) {
-	dayIDStr := chi.URLParam(r, "day_id")
-	dayID, err := uuid.Parse(dayIDStr)
+	userIDStr := chi.URLParam(r, "user_id")
+	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request URL")
 		return
 	}
 
-	events, err := app.Cfg.DB.GetEvents(r.Context(), dayID)
+	events, err := app.Cfg.DB.GetEvents(r.Context(), userID)
 	if err != nil {
 		log.Println(err)
 		respondWithError(w, http.StatusBadRequest, "Invalid request body")
@@ -110,7 +125,7 @@ func (app *Application) getEventsHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, events)
+	respondWithJSON(w, http.StatusOK, models.DatabaseEventsToEvents(events))
 }
 
 func (app *Application) updateEventHandler(w http.ResponseWriter, r *http.Request) {
@@ -122,11 +137,12 @@ func (app *Application) updateEventHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	type parameters struct {
-		EventName   string `json:"event_name"`
-		Description string `json:"description"`
-		Recurring   int32  `json:"recurring"`
-		StartTime   string `json:"start_time"`
-		EndTime     string `json:"end_time"`
+		EventName       string `json:"event_name"`
+		Description     string `json:"description"`
+		Recurring       string `json:"recurring"`
+		CustomRecurring int32  `json:"custom_recurring"`
+		StartTime       string `json:"start_time"`
+		EndTime         string `json:"end_time"`
 	}
 
 	params := parameters{}
@@ -140,17 +156,25 @@ func (app *Application) updateEventHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	startTime, err := time.Parse("15:04", params.StartTime)
+	startTime, err := time.Parse("2006-01-02T15:04:00", params.StartTime)
 	if err != nil {
 		log.Println(err)
 		respondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-	endTime, err := time.Parse("15:04", params.StartTime)
+	endTime, err := time.Parse("2006-01-02T15:04:00", params.EndTime)
 	if err != nil {
 		log.Println(err)
 		respondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
+	}
+
+	recurring := database.NullRecurringType{}
+	if params.Recurring == "" {
+		recurring.Valid = false
+	} else {
+		recurring.Valid = true
+		recurring.RecurringType = database.RecurringType(params.Recurring)
 	}
 
 	err = app.Cfg.DB.UpdateEvent(r.Context(), database.UpdateEventParams{
@@ -158,9 +182,13 @@ func (app *Application) updateEventHandler(w http.ResponseWriter, r *http.Reques
 		UpdatedAt:   time.Now().UTC(),
 		EventName:   params.EventName,
 		Description: params.Description,
-		Recurring:   params.Recurring,
+		Recurring:   recurring,
 		StartTime:   startTime,
 		EndTime:     endTime,
+		CustomRecurring: sql.NullInt32{
+			Int32: params.CustomRecurring,
+			Valid: params.CustomRecurring != 0,
+		},
 	})
 
 	respondWithJSON(w, http.StatusOK, struct{}{})
