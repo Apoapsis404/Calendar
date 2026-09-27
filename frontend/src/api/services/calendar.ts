@@ -4,7 +4,7 @@ export type RecurringType = "daily" | "weekly" | "monthly" | "yearly";
 
 export interface CalendarEvent {
   event_id: string;
-  user_id: string;
+  user_id?: string;
   event_name: string;
   description: string;
   recurring: RecurringType | null;
@@ -22,6 +22,37 @@ export const getEvents = async (userId: string): Promise<CalendarEvent[]> => {
     return response.data;
   } catch (error) {
     console.error("Error fetching events:", error);
+    throw error;
+  }
+};
+
+export interface UpdateCalendarEvent {
+  event_name: string;
+  description: string;
+  recurring: string;
+  custom_recurring: number;
+  start_time: string;
+  end_time: string;
+}
+
+export interface CreateEvent {
+  user_id: string;
+  event_name: string;
+  description: string;
+  recurring: string | null;
+  custom_recurring: number | null;
+  start_time: string;
+  end_time: string;
+}
+
+export const createEvent = async (
+  payload: CreateEvent,
+): Promise<CalendarEvent> => {
+  try {
+    const response = await api.post<CalendarEvent>("/events", payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating event:", error);
     throw error;
   }
 };

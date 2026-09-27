@@ -13,9 +13,34 @@ import (
 	"github.com/google/uuid"
 )
 
+func parseEventDateTime(raw string) (time.Time, error) {
+	layouts := []string{
+		time.RFC3339,
+		time.RFC3339Nano,
+		"2006-01-02T15:04:05",
+		"2006-01-02T15:04:05.999999999",
+		"2006-01-02 15:04:05",
+		"2006-01-02 15:04:05.999999999",
+		"2006-01-02 15:04:05 -0700 -0700",
+		"2006-01-02 15:04:05Z07:00",
+		"2006-01-02 15:04:05.999999999Z07:00",
+	}
+
+	var parseErr error
+	for _, layout := range layouts {
+		parsed, err := time.Parse(layout, raw)
+		if err == nil {
+			return parsed, nil
+		}
+		parseErr = err
+	}
+
+	return time.Time{}, parseErr
+}
+
 func (app *Application) createEventHandler(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		DayID           string `json:"user_id"`
+		UserID          string `json:"user_id"`
 		EventName       string `json:"event_name"`
 		Description     string `json:"description"`
 		Recurring       string `json:"recurring,omitempty"`
@@ -34,20 +59,20 @@ func (app *Application) createEventHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	userID, err := uuid.Parse(params.DayID)
+	userID, err := uuid.Parse(params.UserID)
 	if err != nil {
 		log.Println(err)
 		respondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	startTime, err := time.Parse("2006-01-02T15:04:00", params.StartTime)
+	startTime, err := parseEventDateTime(params.StartTime)
 	if err != nil {
 		log.Println(err)
 		respondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-	endTime, err := time.Parse("2006-01-02T15:04:00", params.EndTime)
+	endTime, err := parseEventDateTime(params.EndTime)
 	if err != nil {
 		log.Println(err)
 		respondWithError(w, http.StatusBadRequest, "Invalid request body")
@@ -156,13 +181,13 @@ func (app *Application) updateEventHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	startTime, err := time.Parse("2006-01-02T15:04:00", params.StartTime)
+	startTime, err := parseEventDateTime(params.StartTime)
 	if err != nil {
 		log.Println(err)
 		respondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-	endTime, err := time.Parse("2006-01-02T15:04:00", params.EndTime)
+	endTime, err := parseEventDateTime(params.EndTime)
 	if err != nil {
 		log.Println(err)
 		respondWithError(w, http.StatusBadRequest, "Invalid request body")

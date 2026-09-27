@@ -6,6 +6,7 @@ type CalendarMonthProps = {
   visibleDates: Date[];
   eventsInMonth: CalendarEvent[];
   currentMonth: Date;
+  onSelectDate?: (date: string) => void;
 };
 
 const weekdayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -14,6 +15,7 @@ export function CalendarMonth({
   visibleDates,
   eventsInMonth,
   currentMonth,
+  onSelectDate,
 }: CalendarMonthProps) {
   const todayKey = formatLocalDateKey(new Date());
 
@@ -49,6 +51,7 @@ export function CalendarMonth({
               date={isoDate}
               isCurrentMonth={isCurrentMonth}
               isToday={isToday}
+              onSelectDate={onSelectDate}
             />
           );
         })}

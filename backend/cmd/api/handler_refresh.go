@@ -55,5 +55,17 @@ func (app *Application) DeleteRefreshTokenHandler(w http.ResponseWriter, r *http
 		return
 	}
 
+	expiredCookie := &http.Cookie{
+		Name:     "access_token",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	}
+	http.SetCookie(w, expiredCookie)
+
 	respondWithJSON(w, http.StatusOK, struct{}{})
 }
