@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { CalendarEvent } from "../../../../api/services/calendar";
 
 type CalendarSidebarItemProps = {
@@ -91,11 +91,6 @@ export const CalendarSidebarItem = ({
   const [draft, setDraft] = useState<CalendarEvent>(event);
   const [isEditing, setIsEditing] = useState(!event.event_id);
 
-  useEffect(() => {
-    setDraft(event);
-    setIsEditing(!event.event_id);
-  }, [event]);
-
   const handleSave = async () => {
     const updatedEvent: CalendarEvent = {
       ...draft,
@@ -121,8 +116,8 @@ export const CalendarSidebarItem = ({
   };
 
   return (
-    <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <header className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-3 py-2">
+    <article className="overflow-hidden rounded-2xl border border-(--color-border) bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)] ring-1 ring-black/5">
+      <header className="flex items-center justify-between gap-3 border-b border-(--color-border) bg-(--color-accent-bg) px-3 py-2">
         {isEditing ? (
           <input
             value={draft.event_name ?? ""}
@@ -130,11 +125,11 @@ export const CalendarSidebarItem = ({
               handleFieldChange("event_name", eventTarget.target.value)
             }
             placeholder="Event name"
-            className="flex-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-center text-base font-semibold text-slate-800 outline-none ring-0"
+            className="flex-1 rounded-lg border border-(--color-border) bg-white px-2 py-1.5 text-center text-base font-semibold text-(--color-text-h) outline-none ring-0"
             aria-label="Event name"
           />
         ) : (
-          <h3 className="flex-1 text-center text-lg font-semibold text-slate-800">
+          <h3 className="flex-1 text-center text-lg font-semibold text-(--color-text-h)">
             {event.event_name || "New event"}
           </h3>
         )}
@@ -153,7 +148,7 @@ export const CalendarSidebarItem = ({
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+                  className="rounded-md border border-(--color-border) bg-white px-2.5 py-1 text-xs font-medium text-(--color-text-h) transition hover:bg-slate-100"
                 >
                   Cancel
                 </button>
@@ -164,7 +159,7 @@ export const CalendarSidebarItem = ({
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+                className="rounded-md border border-(--color-border) bg-white px-2.5 py-1 text-xs font-medium text-(--color-text-h) transition hover:bg-slate-100"
               >
                 Edit
               </button>
@@ -182,11 +177,11 @@ export const CalendarSidebarItem = ({
         </div>
       </header>
 
-      <div className="space-y-3 p-3 text-sm text-slate-600">
+      <div className="space-y-3 p-3 text-sm text-(--color-text)">
         {isEditing ? (
           <>
             <label className="block">
-              <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+              <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-(--color-text)">
                 Description
               </span>
               <textarea
@@ -195,13 +190,13 @@ export const CalendarSidebarItem = ({
                 onChange={(eventTarget) =>
                   handleFieldChange("description", eventTarget.target.value)
                 }
-                className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none ring-0"
+                className="w-full rounded-lg border border-(--color-border) bg-white px-2.5 py-2 text-sm text-(--color-text-h) outline-none"
               />
             </label>
 
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
-                <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-(--color-text)">
                   Start
                 </span>
                 <input
@@ -210,12 +205,12 @@ export const CalendarSidebarItem = ({
                   onChange={(eventTarget) =>
                     handleFieldChange("start_time", eventTarget.target.value)
                   }
-                  className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none ring-0"
+                  className="w-full rounded-lg border border-(--color-border) bg-white px-2.5 py-2 text-sm text-(--color-text-h) outline-none"
                 />
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
+                <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-(--color-text)">
                   End
                 </span>
                 <input
@@ -224,19 +219,23 @@ export const CalendarSidebarItem = ({
                   onChange={(eventTarget) =>
                     handleFieldChange("end_time", eventTarget.target.value)
                   }
-                  className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none ring-0"
+                  className="w-full rounded-lg border border-(--color-border) bg-white px-2.5 py-2 text-sm text-(--color-text-h) outline-none"
                 />
               </label>
             </div>
           </>
         ) : (
           <>
-            <p>{event.description || "No description"}</p>
-            <p>
-              <strong>Start:</strong> {formatReadableDateTime(event.start_time)}
+            <p className="rounded-lg bg-slate-50 px-2.5 py-2 text-(--color-text)">
+              {event.description || "No description"}
             </p>
             <p>
-              <strong>End:</strong> {formatReadableDateTime(event.end_time)}
+              <strong className="text-(--color-text-h)">Start:</strong>{" "}
+              {formatReadableDateTime(event.start_time)}
+            </p>
+            <p>
+              <strong className="text-(--color-text-h)">End:</strong>{" "}
+              {formatReadableDateTime(event.end_time)}
             </p>
           </>
         )}

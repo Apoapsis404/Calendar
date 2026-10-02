@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { addDays, addMonths, startOfMonth, startOfWeek } from "date-fns";
 import { CalendarMonth } from "./components/CalendarMonth";
 import { useGetEvents } from "./hooks/getEvents";
@@ -7,7 +7,6 @@ import { getEventsInMonth } from "./getEventsInMonth";
 import { CalendarHeader } from "./components/CalendarHeader";
 import { CalendarSidebar } from "./components/sidebar/CalendarSidebar";
 import { formatLocalDateKey } from "./formatLocalDateKey";
-import type { CalendarEvent } from "../../api/services/calendar";
 
 export const Calendar = () => {
   const [monthOffset, setMonthOffset] = useState(0);
@@ -24,16 +23,21 @@ export const Calendar = () => {
   const { events, loading, error } = useGetEvents(
     getCurrentUserIdFromStorage() ?? "",
   );
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(events);
 
-  useEffect(() => {
-    setCalendarEvents(events);
-  }, [events]);
+  const eventsInMonth = getEventsInMonth(month, events);
 
-  const eventsInMonth = getEventsInMonth(month, calendarEvents);
-
-  if (loading) return <div>Loading</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  if (loading)
+    return (
+      <div className="rounded-2xl border border-[var(--color-border)] bg-white/80 p-6 text-[var(--color-text)] shadow-sm">
+        Loading
+      </div>
+    );
+  if (error)
+    return (
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700 shadow-sm">
+        Error: {error.message}
+      </div>
+    );
 
   const onPrevMonth = () => {
     setMonthOffset((prevOffset) => prevOffset - 1);
@@ -49,36 +53,47 @@ export const Calendar = () => {
   };
 
   return (
-    <div className="flex gap-6">
-      <div className="flex-1">
-        <h1>Calendar</h1>
-        <div>
-          <CalendarHeader
-            currentMonth={month}
-            onNextMonth={onNextMonth}
-            onPrevMonth={onPrevMonth}
-          />
+    <div className="flex w-full items-stretch gap-(--page-content-gap)">
+      <div className="min-w-0 flex-1 rounded-[28px] border border-(--color-border) bg-red/80 p-4 shadow-[0_20px_45px_rgba(15,23,42,0.06)] backdrop-blur-sm sm:p-6">
+        <div className="mb-5 flex items-center justify-between gap-3">
           <div>
-            <CalendarMonth
-              visibleDates={visibleDates}
-              eventsInMonth={eventsInMonth}
-              currentMonth={month}
-              onSelectDate={changeSelectedDate}
-            />
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-(--color-accent)">
+              Schedule
+            </p>
+            <h1 className="mt-2 text-3xl font-semibold text-(--color-text-h) sm:text-4xl">
+              Calendar
+            </h1>
           </div>
+        </div>
+
+        <CalendarHeader
+          currentMonth={month}
+          onNextMonth={onNextMonth}
+          onPrevMonth={onPrevMonth}
+        />
+
+        <div className="mt-4 overflow-hidden rounded-2xl border border-(--color-border) bg-white p-3">
+          <CalendarMonth
+            visibleDates={visibleDates}
+            eventsInMonth={eventsInMonth}
+            currentMonth={month}
+            onSelectDate={changeSelectedDate}
+          />
         </div>
       </div>
 
       <CalendarSidebar
         isOpen={isSidebarOpen}
         selectedDate={selectedDate}
-        events={calendarEvents}
+        events={events}
         onClose={() => setIsSidebarOpen(false)}
         onDateChange={(nextDate) => {
           setSelectedDate(nextDate);
           setIsSidebarOpen(true);
         }}
-        onEventsChange={setCalendarEvents}
+        onEventsChange={() => {
+          // derived from the latest server state; no local mirror needed
+        }}
       />
     </div>
   );

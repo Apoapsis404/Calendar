@@ -2,9 +2,18 @@ import { LoginForm } from "./components/LoginForm";
 
 export const Login = () => {
   return (
-    <div>
-      <h1>Login</h1>
-      <LoginForm></LoginForm>
+    <div className="flex min-h-[70vh] items-center justify-center px-4 py-10">
+      <div className="w-full max-w-md rounded-[28px] border border-[var(--color-border)] bg-white/90 p-6 shadow-[0_20px_45px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+        <div className="mb-6 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-accent)]">
+            Welcome back
+          </p>
+          <h1 className="mt-2 text-3xl font-semibold text-[var(--color-text-h)]">
+            Login
+          </h1>
+        </div>
+        <LoginForm />
+      </div>
     </div>
   );
 };

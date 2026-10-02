@@ -10,9 +10,9 @@ export function CalendarHeader({
   onNextMonth,
 }: CalendarHeaderProps) {
   return (
-    <div className="flex items-center gap-3 justify-center">
+    <div className="flex items-center justify-center gap-3">
       <button onClick={onPrevMonth}>Prev</button>
-      <h2 style={{ margin: "0 0 8px" }}>
+      <h2 className="mb-2 text-[var(--color-text-h)]">
         {currentMonth.toLocaleString("default", {
           month: "long",
           year: "numeric",

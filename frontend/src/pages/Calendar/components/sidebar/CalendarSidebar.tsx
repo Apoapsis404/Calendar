@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import type { CalendarEvent } from "../../../../api/services/calendar";
 import { getCurrentUserIdFromStorage } from "../../../../context/getUserID";
 import { useCreateEvent } from "../../hooks/useCreateEvent";
@@ -55,15 +55,22 @@ export const CalendarSidebar = ({
   onEventsChange,
 }: CalendarSidebarProps) => {
   const { createEvent: createCalendarEvent, loading, error } = useCreateEvent();
-  const [dayEvents, setDayEvents] = useState<CalendarEvent[]>([]);
+  const [draftEvents, setDraftEvents] = useState<CalendarEvent[]>([]);
 
-  useEffect(() => {
-    setDayEvents(
-      events.filter(
-        (event) => (event.start_time ?? "").slice(0, 10) === selectedDate,
+  const dayEvents = useMemo(
+    () =>
+      [...draftEvents, ...events].filter(
+        (event, index, all) =>
+          (event.start_time ?? "").slice(0, 10) === selectedDate &&
+          all.findIndex(
+            (candidate) =>
+              candidate.event_id === event.event_id &&
+              candidate.start_time === event.start_time &&
+              candidate.end_time === event.end_time,
+          ) === index,
       ),
-    );
-  }, [events, selectedDate]);
+    [draftEvents, events, selectedDate],
+  );
 
   const handleSaveEvent = async (event: CalendarEvent) => {
     const userId = getCurrentUserIdFromStorage();
@@ -90,21 +97,15 @@ export const CalendarSidebar = ({
     const nextEvents = [...events, createdEvent];
     onEventsChange(nextEvents);
     persistEventsToStorage(nextEvents);
-    setDayEvents(
-      nextEvents.filter(
-        (item) => (item.start_time ?? "").slice(0, 10) === selectedDate,
-      ),
-    );
+    setDraftEvents((current) => [...current, createdEvent]);
   };
 
   const handleDeleteEvent = (eventId: string) => {
     const nextEvents = events.filter((event) => event.event_id !== eventId);
     onEventsChange(nextEvents);
     persistEventsToStorage(nextEvents);
-    setDayEvents(
-      nextEvents.filter(
-        (item) => (item.start_time ?? "").slice(0, 10) === selectedDate,
-      ),
+    setDraftEvents((current) =>
+      current.filter((event) => event.event_id !== eventId),
     );
   };
 
@@ -130,7 +131,7 @@ export const CalendarSidebar = ({
       updated_at: new Date().toISOString(),
     };
 
-    setDayEvents((current) => [...current, draftEvent]);
+    setDraftEvents((current) => [...current, draftEvent]);
   };
 
   const changeSelectedDate = (increment: number) => {
@@ -142,30 +143,30 @@ export const CalendarSidebar = ({
   return (
     <aside
       className={[
-        "w-[360px] max-w-full shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-xl transition-all duration-300 ease-out",
+        "w-[var(--calendar-sidebar-width)] max-w-full shrink-0 overflow-hidden rounded-[28px] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-[0_20px_45px_rgba(15,23,42,0.08)] transition-all duration-300 ease-out",
         isOpen
           ? "translate-x-0 opacity-100"
-          : "translate-x-full opacity-0 pointer-events-none",
+          : "pointer-events-none translate-x-full opacity-0",
       ].join(" ")}
       aria-hidden={!isOpen}
     >
-      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
+      <div className="flex items-center justify-between border-b border-[var(--color-border)] bg-white px-4 py-3">
         <button
           type="button"
-          className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm font-medium text-slate-700 hover:bg-slate-100"
+          className="rounded-md border border-[var(--color-border)] bg-white px-2 py-1 text-sm font-medium text-[var(--color-text-h)] transition hover:bg-[var(--color-accent-bg)]"
           onClick={() => changeSelectedDate(-1)}
           aria-label="Previous day"
         >
           ←
         </button>
 
-        <span className="text-lg font-semibold text-slate-800">
+        <span className="text-lg font-semibold text-[var(--color-text-h)]">
           {formatSidebarDate(selectedDate)}
         </span>
 
         <button
           type="button"
-          className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm font-medium text-slate-700 hover:bg-slate-100"
+          className="rounded-md border border-[var(--color-border)] bg-white px-2 py-1 text-sm font-medium text-[var(--color-text-h)] transition hover:bg-[var(--color-accent-bg)]"
           onClick={() => changeSelectedDate(1)}
           aria-label="Next day"
         >
@@ -173,12 +174,12 @@ export const CalendarSidebar = ({
         </button>
       </div>
 
-      <div className="max-h-[70vh] overflow-y-auto px-4 py-4">
+      <div className="max-h-[70vh] overflow-y-auto bg-[var(--color-bg)] px-4 py-4">
         {dayEvents.length ? (
           <div className="space-y-4">
             {dayEvents.map((event, index) => (
               <div
-                key={`${event.event_id || "draft"}-${event.start_time}-${index}`}
+                key={`${event.event_id || "draft"}-${event.start_time}-${event.end_time}-${index}`}
               >
                 <CalendarSidebarItem
                   event={event}
@@ -186,13 +187,13 @@ export const CalendarSidebar = ({
                   onDelete={handleDeleteEvent}
                 />
                 {index < dayEvents.length - 1 && (
-                  <div className="mt-4 border-t-2 border-slate-300" />
+                  <div className="mt-4 border-t-2 border-[var(--color-border)]" />
                 )}
               </div>
             ))}
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">
+          <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-accent-bg)] p-4 text-sm text-[var(--color-text)]">
             No events for this date.
           </div>
         )}
@@ -208,7 +209,7 @@ export const CalendarSidebar = ({
             type="button"
             onClick={addNewEvent}
             disabled={loading}
-            className="rounded-full bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-sky-300"
+            className="rounded-full bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Adding..." : "Add new event"}
           </button>

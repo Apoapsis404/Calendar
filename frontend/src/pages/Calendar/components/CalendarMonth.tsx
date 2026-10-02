@@ -21,13 +21,7 @@ export function CalendarMonth({
 
   return (
     <div>
-      <div
-        className="grid w-full grid-cols-7 gap-2"
-        style={{
-          gridTemplateRows: "repeat(6, minmax(0, 1fr))",
-          gridAutoRows: "minmax(88px, 1fr)",
-        }}
-      >
+      <div className="grid w-full grid-cols-7 gap-2 auto-rows-[minmax(88px,1fr)] grid-rows-6">
         {weekdayNames.map((weekday) => (
           <div key={weekday} className="text-center font-bold">
             {weekday}
